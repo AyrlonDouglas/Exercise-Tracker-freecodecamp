@@ -37,6 +37,7 @@ module.exports = {
       } else {
         date = new Date(date);
       }
+      let user = await User.findById(id);
       await Exercise.create({
         description,
         duration,
@@ -53,7 +54,8 @@ module.exports = {
               day: "2-digit",
               year: "numeric",
             }),
-            _id: response._id,
+            _id: user._id,
+            username: user.username,
           });
         })
         .catch((error) => {
@@ -116,7 +118,7 @@ module.exports = {
         username: user.username,
         count: logs.length,
         _id: user._id,
-        logs,
+        log: logs,
       });
     } catch (error) {
       console.error(error.message);
