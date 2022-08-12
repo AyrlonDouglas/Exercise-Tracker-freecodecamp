@@ -96,6 +96,8 @@ module.exports = {
 
       await Promise.all([logs, user]).then((response) => {
         logs = response[0].map((log) => {
+          delete log._id;
+          delete log.provider;
           delete log.__v;
           return {
             ...log,
@@ -106,9 +108,9 @@ module.exports = {
       });
 
       return res.json({
+        _id: user._id,
         username: user.username,
         count: logs.length,
-        _id: user._id,
         log: logs,
       });
     } catch (error) {
