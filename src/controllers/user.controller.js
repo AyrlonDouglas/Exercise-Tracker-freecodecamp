@@ -46,16 +46,11 @@ module.exports = {
       })
         .then((response) => {
           return res.json({
-            description: response.description,
-            duration: response.duration,
-            date: new Date(response.date).toLocaleString("pt-br", {
-              weekday: "short",
-              month: "short",
-              day: "2-digit",
-              year: "numeric",
-            }),
             _id: user._id,
             username: user.username,
+            date: new Date(response.date).toDateString(),
+            duration: response.duration,
+            description: response.description,
           });
         })
         .catch((error) => {
@@ -68,7 +63,6 @@ module.exports = {
   },
   async getExercises(req, res) {
     try {
-      console.log("entrou abigo");
       const { id } = req.params;
       let { from, to, limit } = req.query;
       console.log(req.params, req.query);
@@ -85,34 +79,31 @@ module.exports = {
       if (!from) {
         logs = Exercise.find({
           provider: id,
-        });
+        }).lean();
       } else if (limit && from) {
         logs = Exercise.find({
           provider: id,
           date: { $gte: from, $lte: to },
-        }).limit(limit);
+        })
+          .limit(limit)
+          .lean();
       } else {
         logs = Exercise.find({
           provider: id,
           date: { $gte: from, $lte: to },
-        });
+        }).lean();
       }
-      // let countDocs = Exercise.countDocuments({}, (err, count) => {
-      //   return count;
-      // });
-      await Promise.all([
-        logs,
-        user,
-        // , countDocs
-      ]).then((response) => {
-        logs = response[0];
-        user = response[1];
-        // countDocs = response[2];
-      });
 
-      // logs = logs.forEach((log) => {
-      //   log.date = new Date(log.date).toLocaleString();
-      // });
+      await Promise.all([logs, user]).then((response) => {
+        logs = response[0].map((log) => {
+          delete log.__v;
+          return {
+            ...log,
+            date: log.date.toDateString(),
+          };
+        });
+        user = response[1];
+      });
 
       return res.json({
         username: user.username,
